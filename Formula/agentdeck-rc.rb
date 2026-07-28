@@ -13,7 +13,6 @@ class AgentdeckRc < Formula
     intel: "c0b1ff622d489c3b8b64a27be9e9bd51ef915d6efe4be5f4abf505007d3c4d2d",
   )
   license "MIT"
-  conflicts_with "agentdeck", because: "both formulae install the agentdeck binary and shell completions"
 
   def install
     bin.install "agentdeck"
