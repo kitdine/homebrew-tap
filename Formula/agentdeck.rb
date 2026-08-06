@@ -5,12 +5,12 @@
 class Agentdeck < Formula
   desc "CLI for managing multiple Codex/Claude providers, usage, and credentials"
   homepage "https://github.com/kitdine/agent-deck"
-  url "https://github.com/kitdine/agent-deck/releases/download/v0.2.2/" \
-      "agentdeck_v0.2.2_darwin_#{on_arch_conditional arm: "arm64", intel: "amd64"}.tar.gz"
-  version "0.2.2"
+  url "https://github.com/kitdine/agent-deck/releases/download/v0.3.0/" \
+      "agentdeck_v0.3.0_darwin_#{on_arch_conditional arm: "arm64", intel: "amd64"}.tar.gz"
+  version "0.3.0"
   sha256 on_arch_conditional(
-    arm:   "70c8cee680832e0ff8b7e4048f0e0f671b5524b3342dc6b67a02451444e4ecdb",
-    intel: "508e044830dfc8583a1abf49e507cd30f9888bbbe9b8b4f738020f885a259e1b",
+    arm:   "01553046fd3a5462f06c327512413f759fdc48c54ff25b5c11c0480ffe6c70af",
+    intel: "78ea5eea147cf5575a28d51988416d488d6b00737f8ee4c2ff8058a99d8917f9",
   )
   license "MIT"
 
@@ -46,7 +46,7 @@ class Agentdeck < Formula
 
   test do
     output = shell_output("#{bin}/agentdeck version")
-    assert_match "Release Version: v0.2.2", output
+    assert_match "Release Version: v0.3.0", output
     refute_match "dev", output
     assert_path_exists bash_completion/"agentdeck"
     assert_path_exists zsh_completion/"_agentdeck"
