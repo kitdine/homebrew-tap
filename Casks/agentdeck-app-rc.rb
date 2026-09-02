@@ -4,11 +4,11 @@
 # Installs the notarized AgentDeck desktop app, its embedded helper, and the
 # shell completions packaged inside the bundle.
 cask "agentdeck-app-rc" do
-  version "0.5.0-rc.4"
-  sha256 "594475b7f8c8386f2411689bf47d9d8ad4a0ff629d8e866f4c56de0faae1331a"
+  version "0.5.0-rc.5"
+  sha256 "f5e85a44d4e1d063dd6a9db14e8e39889d83c8d37ba8380dcba114c98ca6ce8f"
 
-  url "https://github.com/kitdine/agent-deck/releases/download/v0.5.0-rc.4/" \
-      "AgentDeck_v0.5.0-rc.4_universal.dmg"
+  url "https://github.com/kitdine/agent-deck/releases/download/v0.5.0-rc.5/" \
+      "AgentDeck_v0.5.0-rc.5_universal.dmg"
   name "AgentDeck"
   desc "Menu bar app and widget for Codex/Claude usage, sessions, and providers"
   homepage "https://github.com/kitdine/agent-deck"
@@ -28,7 +28,10 @@ cask "agentdeck-app-rc" do
     ["agentdeck", "agentdeck-rc"].each do |conflicting_formula|
       next unless (HOMEBREW_CELLAR/conflicting_formula).directory?
 
-      odie <<~ERROR
+      # `odie` raises SystemExit, which bypasses Homebrew's Cask rollback and
+      # leaves a Caskroom receipt behind. A regular exception is unwound by the
+      # installer before it reports the refusal.
+      raise <<~ERROR
         The CLI-only #{conflicting_formula} formula is installed and already owns
         the `agentdeck` command. Migrate rather than installing both:
           brew uninstall #{conflicting_formula}
