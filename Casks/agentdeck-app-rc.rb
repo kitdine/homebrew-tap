@@ -4,11 +4,11 @@
 # Installs the notarized AgentDeck desktop app, its embedded helper, and the
 # shell completions packaged inside the bundle.
 cask "agentdeck-app-rc" do
-  version "0.5.0-rc.5"
-  sha256 "f5e85a44d4e1d063dd6a9db14e8e39889d83c8d37ba8380dcba114c98ca6ce8f"
+  version "0.5.0-rc.6"
+  sha256 "6df1f2391f6aba8a8d833dfe6b87d2145257cd2f44c2e8d00581e98817d8a3ff"
 
-  url "https://github.com/kitdine/agent-deck/releases/download/v0.5.0-rc.5/" \
-      "AgentDeck_v0.5.0-rc.5_universal.dmg"
+  url "https://github.com/kitdine/agent-deck/releases/download/v0.5.0-rc.6/" \
+      "AgentDeck_v0.5.0-rc.6_universal.dmg"
   name "AgentDeck"
   desc "Menu bar app and widget for Codex/Claude usage, sessions, and providers"
   homepage "https://github.com/kitdine/agent-deck"
