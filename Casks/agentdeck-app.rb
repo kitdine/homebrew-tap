@@ -4,11 +4,11 @@
 # Installs the notarized AgentDeck desktop app, its embedded helper, and the
 # shell completions packaged inside the bundle.
 cask "agentdeck-app" do
-  version "0.5.0"
-  sha256 "32d2f72dde9e43597ab7aeb14a5d5a18e04b4eebdd04a57b9704385ac8636967"
+  version "0.6.0"
+  sha256 "4402afd6ba547a50bd405e2587efd2e01254658a1306a0544a63dcdf64156b29"
 
-  url "https://github.com/kitdine/agent-deck/releases/download/v0.5.0/" \
-      "AgentDeck_v0.5.0_universal.dmg"
+  url "https://github.com/kitdine/agent-deck/releases/download/v0.6.0/" \
+      "AgentDeck_v0.6.0_universal.dmg"
   name "AgentDeck"
   desc "Menu bar app and widget for Codex/Claude usage, sessions, and providers"
   homepage "https://github.com/kitdine/agent-deck"
@@ -24,20 +24,19 @@ cask "agentdeck-app" do
   # migration instead of failing on a link collision the user cannot read.
   conflicts_with cask: ["agentdeck-app-rc"]
 
-  preflight do
+  preflight_steps do
     ["agentdeck", "agentdeck-rc"].each do |conflicting_formula|
-      next unless (HOMEBREW_CELLAR/conflicting_formula).directory?
-
-      # `odie` raises SystemExit, which bypasses Homebrew's Cask rollback and
-      # leaves a Caskroom receipt behind. A regular exception is unwound by the
-      # installer before it reports the refusal.
-      raise <<~ERROR
-        The CLI-only #{conflicting_formula} formula is installed and already owns
-        the `agentdeck` command. Migrate rather than installing both:
-          brew uninstall #{conflicting_formula}
-          brew install --cask agentdeck-app
-        Your AgentDeck state in ~/.agentdeck is untouched by that migration.
-      ERROR
+      if_path_exists "{{HOMEBREW_CELLAR}}/#{conflicting_formula}" do
+        # A failed install step unwinds through Homebrew's Cask rollback. The
+        # real-brew regression checks that no Caskroom receipt survives.
+        run "/bin/sh", args: ["-c", <<~SH]
+          echo 'The CLI-only #{conflicting_formula} formula is installed and already owns the agentdeck command. Migrate rather than installing both:' >&2
+          echo '  brew uninstall #{conflicting_formula}' >&2
+          echo '  brew install --cask agentdeck-app' >&2
+          echo 'Your AgentDeck state in ~/.agentdeck is untouched by that migration.' >&2
+          exit 1
+        SH
+      end
     end
   end
 
