@@ -4,11 +4,11 @@
 # Installs the notarized AgentDeck desktop app, its embedded helper, and the
 # shell completions packaged inside the bundle.
 cask "agentdeck-app-rc" do
-  version "0.6.0-rc.5"
-  sha256 "239c8bc64c40f1e697a90512f7824e5d1e96794abee8cfa751595881f85c02ba"
+  version "0.6.5-rc.1"
+  sha256 "dbf55d4a8ef4c6c7a1230b38e9a7014143c18b697d4545d179e00eb4696c080c"
 
-  url "https://github.com/kitdine/agent-deck/releases/download/v0.6.0-rc.5/" \
-      "AgentDeck_v0.6.0-rc.5_universal.dmg"
+  url "https://github.com/kitdine/agent-deck/releases/download/v0.6.5-rc.1/" \
+      "AgentDeck_v0.6.5-rc.1_universal.dmg"
   name "AgentDeck"
   desc "Menu bar app and widget for Codex/Claude usage, sessions, and providers"
   homepage "https://github.com/kitdine/agent-deck"
@@ -41,6 +41,16 @@ cask "agentdeck-app-rc" do
   end
 
   app "AgentDeck.app"
+  # Install-step sandboxes cannot reach PlugInKit. The signed app registers its
+  # extension on normal first launch; the uninstall script runs before removal.
+  uninstall quit: "com.kitdine.agentdeck",
+            script: {
+              executable: "/bin/sh",
+              args: ["-c", 'if [ -d "$1" ]; then /usr/bin/pluginkit -r "$1"; fi',
+                     "agentdeck-widget-uninstall", "#{appdir}/AgentDeck.app/Contents/PlugIns/AgentDeckWidget.appex"],
+              sudo: false,
+            }
+
   binary "#{appdir}/AgentDeck.app/Contents/Helpers/agentdeck"
   binary "#{appdir}/AgentDeck.app/Contents/Resources/completions/agentdeck.bash",
          target: "#{HOMEBREW_PREFIX}/etc/bash_completion.d/agentdeck"
