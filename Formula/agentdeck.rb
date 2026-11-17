@@ -5,12 +5,12 @@
 class Agentdeck < Formula
   desc "CLI for managing multiple Codex/Claude providers, usage, and credentials"
   homepage "https://github.com/kitdine/agent-deck"
-  url "https://github.com/kitdine/agent-deck/releases/download/v0.6.5/" \
-      "agentdeck_v0.6.5_darwin_#{on_arch_conditional arm: "arm64", intel: "amd64"}.tar.gz"
-  version "0.6.5"
+  url "https://github.com/kitdine/agent-deck/releases/download/v0.7.0/" \
+      "agentdeck_v0.7.0_darwin_#{on_arch_conditional arm: "arm64", intel: "amd64"}.tar.gz"
+  version "0.7.0"
   sha256 on_arch_conditional(
-    arm:   "c8f598280e0e391c93493436936f71955a8c1cdad3760c1e1149e02d944e9c42",
-    intel: "7f7bca4eb2e4f624e71a3fe7e9bf2495dd19209a617663d1a9672cbb718ece56",
+    arm:   "e670e2fb3be3a3ee95355eb02d023254a115a9cbd97e7ca683f47dc54d500505",
+    intel: "ef68a799a9cbcd9eb2d759733c2d1beeba91276460a749c025e9edeed7226ce0",
   )
   license "MIT"
 
@@ -25,6 +25,12 @@ class Agentdeck < Formula
 
   def caveats
     <<~EOS
+      Make this installation the owner of your AgentDeck state, once:
+        #{opt_bin}/agentdeck install claim
+      Until then, agentdeck uses isolated state in ~/.agentdeck-dev. Upgrades
+      keep ownership automatically. If another installation, such as the
+      AgentDeck app or make install, owns your state, quit it and add --takeover.
+
       Project-attribution wrappers are optional and only act when a provider
       routes through a declared Headroom wrapper. With no eligibility marker,
       wrappers invoke the real client without starting AgentDeck. When the
@@ -46,7 +52,7 @@ class Agentdeck < Formula
 
   test do
     output = shell_output("#{bin}/agentdeck version")
-    assert_match "Release Version: v0.6.5", output
+    assert_match "Release Version: v0.7.0", output
     refute_match "dev", output
     assert_path_exists bash_completion/"agentdeck"
     assert_path_exists zsh_completion/"_agentdeck"
