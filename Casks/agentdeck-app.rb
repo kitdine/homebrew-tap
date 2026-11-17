@@ -4,11 +4,11 @@
 # Installs the notarized AgentDeck desktop app, its embedded helper, and the
 # shell completions packaged inside the bundle.
 cask "agentdeck-app" do
-  version "0.6.5"
-  sha256 "9c7a77073d41352900905a1f7c02ac4aeec9f1fb2e04612a43b35fc2a9e6a9ef"
+  version "0.7.0"
+  sha256 "59450071bf15c3f61c19449dc90f08deffb0386812d583470136642bb6962085"
 
-  url "https://github.com/kitdine/agent-deck/releases/download/v0.6.5/" \
-      "AgentDeck_v0.6.5_universal.dmg"
+  url "https://github.com/kitdine/agent-deck/releases/download/v0.7.0/" \
+      "AgentDeck_v0.7.0_universal.dmg"
   name "AgentDeck"
   desc "Menu bar app and widget for Codex/Claude usage, sessions, and providers"
   homepage "https://github.com/kitdine/agent-deck"
@@ -40,15 +40,63 @@ cask "agentdeck-app" do
     end
   end
 
+  # Homebrew owns the App's files: it creates, replaces and removes the bundle.
+  # AgentDeck only records which installation owns AgentDeck state, in one
+  # receipt in the user's account that the installed helper writes.
   app "AgentDeck.app"
-  # Install-step sandboxes cannot reach PlugInKit. The signed app registers its
-  # extension on normal first launch; the uninstall script runs before removal.
-  uninstall quit: "com.kitdine.agentdeck",
+
+  # The installed helper records this App as the owner inside AgentDeck's
+  # ownership lock, and resolves every AgentDeck path itself. It refuses while
+  # another installation is the valid owner, and Homebrew then rolls this
+  # install back. The wrapper exists for that one refusal: the helper's own next
+  # step names --takeover, which a cask never passes, so the wrapper prints the
+  # migration instead. Every other output and the exit status pass through.
+  postflight_steps do
+    run "/bin/sh",
+        args: ["-c", <<~'SH', "agentdeck-cask-register", "{{appdir}}/AgentDeck.app/Contents/Helpers/agentdeck", "agentdeck-app"],
+          set -u
+          helper=$1
+          token=$2
+          errors=$(/usr/bin/mktemp) || exit 1
+          trap '/bin/rm -f "$errors"' EXIT
+          "$helper" --format text install register --channel homebrew_cask --executable "$helper" 2>"$errors"
+          status=$?
+          if [ "$status" -ne 0 ] && /usr/bin/grep -Fqx -- '  reason: owned_by_other' "$errors"; then
+            printf '%s\n' \
+              'install_claim_refused: Another AgentDeck installation owns AgentDeck state.' \
+              '  reason: owned_by_other' \
+              "  next: Keep the current installation, or uninstall it with its original installation method, then retry this Homebrew operation for $token." >&2
+          else
+            /bin/cat "$errors" >&2
+          fi
+          exit "$status"
+        SH
+        writable_paths: ["Library/Application Support/AgentDeck"],
+        writable_base: :home,
+        print_stdout: true
+  end
+
+  # Install-step sandboxes cannot reach PlugInKit; the signed app registers its
+  # extension on normal first launch. The uninstall script runs after the app
+  # quits and before Homebrew removes the bundle. An extension that was never
+  # registered is not an error: only a failed query fails the uninstall, and
+  # only an exact path match is unregistered. The receipt is left in place; once
+  # the App is gone it names nothing and any installation may take ownership.
+  uninstall quit:   "com.kitdine.agentdeck",
             script: {
               executable: "/bin/sh",
-              args: ["-c", 'if [ -d "$1" ]; then /usr/bin/pluginkit -r "$1"; fi',
-                     "agentdeck-widget-uninstall", "#{appdir}/AgentDeck.app/Contents/PlugIns/AgentDeckWidget.appex"],
-              sudo: false,
+              args:       ["-c", <<~'SH', "agentdeck-widget-uninstall", "#{appdir}/AgentDeck.app/Contents/PlugIns/AgentDeckWidget.appex", "com.kitdine.agentdeck.widget"],
+                set -u
+                target=$1
+                identifier=$2
+                registered=$(/usr/bin/pluginkit -m -A -D -vv -i "$identifier") || exit $?
+                if printf '%s\n' "$registered" | /usr/bin/sed -n 's/^[[:space:]]*Path = //p' | /usr/bin/grep -Fqx -- "$target"; then
+                  /usr/bin/pluginkit -r "$target"
+                  exit $?
+                fi
+                exit 0
+              SH
+              sudo:       false,
             }
 
   binary "#{appdir}/AgentDeck.app/Contents/Helpers/agentdeck"
